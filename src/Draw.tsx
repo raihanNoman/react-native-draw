@@ -210,7 +210,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const [animVal] = useState(new Animated.Value(0)); //Change 2
     const progress = useRef(new Animated.Value(0)).current // Change 3 //Change 4: import useRef
       
-   const maximumTime = 5 //Change 6: // later get it as props
+//    const maximumTime = 5 //Change 6: // later get it as props  // dont need it. Since we implemented maxtime from props
     //Change 5: 
     const startTimer = () => {
       Animated.timing(progress, {
