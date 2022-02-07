@@ -23,16 +23,9 @@ import {
   PanGestureHandlerStateChangeEvent,
   State,
 } from 'react-native-gesture-handler';
-
 import { createSVGPath } from './utils';
 import { DrawingTool, PathDataType, PathType } from './types';
-import { Brush, Delete, Eraser, Palette, Undo } from './icons';
-import {
-  Button,
-  SVGRenderer,
-  BrushProperties,
-  BrushPreview,
-} from './components';
+import {SVGRenderer,} from './components';
 import {
   DEFAULT_COLORS,
   DEFAULT_THICKNESS,
@@ -43,7 +36,6 @@ import {
 } from './constants';
 import type { BrushType } from './components/renderer/BrushPreview';
 import { colorButtonSize } from './components/colorPicker/ColorButton';
-
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export interface DrawInitialValues {
@@ -312,14 +304,13 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       colors = DEFAULT_COLORS,
       initialValues = {},
       canvasStyle,
-      buttonStyle,
+ 
       onPathsChange,
       height = screenHeight - 80,
       width = screenWidth,
-      brushPreview = 'stroke',
-      hideBottom = false,
+
       simplifyOptions = {},
-      autoDismissColorPicker = false,
+
       eraserSize = DEFAULT_ERASER_SIZE,
       combineWithLatestPath = false,
     } = {},
@@ -342,7 +333,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       paths: generateSVGPaths(initialValues.paths || [], simplifyOptions),
     };
 
-    const viewVisibility = getVisibility(hideBottom);
+
 
     const [paths, setPaths] = useState<PathType[]>(initialValues.paths!);
     const [path, setPath] = useState<PathDataType>([]);
@@ -424,7 +415,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
 
     const handleThicknessOnChange = (t: number) => setThickness(t);
 
-    const handleOpacityOnChange = (o: number) => setOpacity(o);
+  
 
     const handleColorPicker = () => {
       if (!colorPickerVisible) {
@@ -462,45 +453,11 @@ const Draw = forwardRef<DrawRef, DrawProps>(
         }, [])
       );
     };
-    const handleColorPickerSelection = (newColor: string) => {
-      setColor(newColor);
-      if (autoDismissColorPicker) {
-        handleColorPicker();
-      }
-    };
 
-    const handleModeChange = () => {
-      setTool((prev) =>
-        prev === DrawingTool.Brush ? DrawingTool.Eraser : DrawingTool.Brush
-      );
-    };
 
     const clear = () => {
       setPaths([]);
       setPath([]);
-    };
-
-    const handleClear = () => {
-      focusCanvas();
-      if (paths.length > 0) {
-        Alert.alert(
-          'Delete drawing',
-          'Are you sure you want to delete your masterpiece?',
-          [
-            {
-              text: 'No',
-              style: 'cancel',
-            },
-            {
-              onPress: clear,
-              text: 'Yes',
-            },
-          ],
-          {
-            cancelable: true,
-          }
-        );
-      }
     };
 
     const [animVal] = useState(new Animated.Value(0));
@@ -564,12 +521,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const opacityOverlay = animVal.interpolate({
       inputRange: [-SLIDERS_HEIGHT, 0],
       outputRange: [0.5, 0],
-      extrapolate: 'clamp',
-    });
-
-    const viewOpacity = animVal.interpolate({
-      inputRange: [-brushPropertiesHeight, 0],
-      outputRange: [1, 0],
       extrapolate: 'clamp',
     });
 
@@ -681,87 +632,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
               </View>
             </PanGestureHandler>
           </Animated.View>
-
-          {hideBottom !== true && (
-            <View style={styles.bottomContainer}>
-              <View style={styles.bottomContent}>
-                <View style={styles.buttonsContainer}>
-                  {!viewVisibility.clear && (
-                    <Button
-                      onPress={handleClear}
-                      color="#81090A"
-                      style={buttonStyle}
-                    >
-                      <Delete fill="#81090A" height={30} width={30} />
-                    </Button>
-                  )}
-                  {!viewVisibility.undo && (
-                    <View style={!viewVisibility.clear && styles.endButton}>
-                      <Button
-                        onPress={handleUndo}
-                        color="#ddd"
-                        style={buttonStyle}
-                      >
-                        <Undo fill="#ddd" height={30} width={30} />
-                      </Button>
-                    </View>
-                  )}
-                </View>
-
-                <BrushPreview
-                  color={color}
-                  opacity={opacity}
-                  thickness={thickness}
-                  previewType={brushPreview}
-                />
-
-                <View style={styles.buttonsContainer}>
-                  {(!viewVisibility.brushProperties.opacity ||
-                    !viewVisibility.brushProperties.size) && (
-                    <Button
-                      onPress={handleModeChange}
-                      color="#ddd"
-                      style={buttonStyle}
-                    >
-                      {tool === DrawingTool.Brush ? (
-                        <Brush fill="#ddd" height={30} width={30} />
-                      ) : (
-                        <Eraser fill="#ddd" height={30} width={30} />
-                      )}
-                    </Button>
-                  )}
-                  {!viewVisibility.colorPicker && (
-                    <View
-                      style={
-                        (!viewVisibility.brushProperties.opacity ||
-                          !viewVisibility.brushProperties.size) &&
-                        styles.endButton
-                      }
-                    >
-                      <Button
-                        onPress={handleColorPicker}
-                        color={color}
-                        style={buttonStyle}
-                      >
-                        <Palette fill={color} height={30} width={30} />
-                      </Button>
-                    </View>
-                  )}
-                </View>
-              </View>
-              <BrushProperties
-                visible={colorPickerVisible}
-                thickness={thickness}
-                thicknessOnChange={handleThicknessOnChange}
-                opacity={opacity}
-                opacityOnChange={handleOpacityOnChange}
-                viewOpacity={viewOpacity}
-                selectedColor={color}
-                updateColor={handleColorPickerSelection}
-                colors={colors}
-              />
-            </View>
-          )}
         </View>
       </>
     );
@@ -786,24 +656,6 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%',
     backgroundColor: '#000000',
-  },
-  bottomContainer: {
-    height: 80,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  bottomContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: 15,
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  endButton: {
-    marginLeft: 10,
   },
 });
 
