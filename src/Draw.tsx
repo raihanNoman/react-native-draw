@@ -101,6 +101,7 @@ export interface DrawProps {
    * @default false
    */
   combineWithLatestPath?: boolean;
+    maximumTime?: number; // Change 2.2 // Change 2.3 and 2.4 are in Draw.ts folder
 }
 
 export interface DrawRef {
@@ -161,6 +162,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       width = screenWidth,
 
       simplifyOptions = {},
+      maximumTime,  //Change 2.1
 
       eraserSize = DEFAULT_ERASER_SIZE,
       combineWithLatestPath = false,
