@@ -110,7 +110,7 @@ export interface DrawRef {
   clear: () => void;
   getPaths: () => PathType[];
   addPath: (path: PathType) => void;
-  getSvg: () => string;
+  getSvg: () => object;
 }
 /**
  * @param paths SVG path data
@@ -398,40 +398,32 @@ const Draw = forwardRef<DrawRef, DrawProps>(
         setPaths((prev) => [...prev, newPath]);
       },
       getSvg: () => {
-        const serializePath = (
-          d: string,
-          stroke: string,
-          strokeWidth: number,
-          strokeOpacity: number
-        ) =>
-          `<path d="${d}" stroke="${stroke}" stroke-width="${strokeWidth}" opacity="${strokeOpacity}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
-
-        const separatePaths = (p: PathType) =>
-          p.path!.reduce(
-            (acc, innerPath) =>
-              `${acc}${serializePath(
-                innerPath,
-                p.color,
-                p.thickness,
-                p.opacity
-              )}`,
-            ''
-          );
-
-        const combinedPath = (p: PathType) =>
-          `${serializePath(
-            p.path!.join(' '),
-            p.color,
-            p.thickness,
-            p.opacity
-          )}`;
-
+  const serializePath = (d: string) => `d= ${d}`;
+        const separatePaths = (p: PathType) =>p.path!.reduce(
+            (acc, innerPath) =>`${acc}${serializePath( innerPath,)}`,'');
+        const combinedPath = (p: PathType) =>`${serializePath(p.path!.join(' '), )}`;
         const serializedPaths = paths.reduce(
           (acc, p) => `${acc}${p.combine ? combinedPath(p) : separatePaths(p)}`,
           ''
         );
-
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${serializedPaths}</svg>`;
+  
+          const pathsStringArray : string[] = []
+        const split = serializedPaths.split("d= ")
+        for (let i = 0; i<split.length;i++){
+          if(split[i].startsWith("M")){
+            pathsStringArray.push(split[i])
+          }
+        }
+       
+        const DrawSvgObj = {
+          height: height ,
+          width : width, 
+          viewBox : `"0 0 ${width} ${height}"`, 
+          pathStrings: pathsStringArray, 
+          timeStamps: times,  
+        }
+        return DrawSvgObj;
+     
       },
     }));
 
