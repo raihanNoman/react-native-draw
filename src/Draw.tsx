@@ -39,31 +39,20 @@ import { colorButtonSize } from './components/colorPicker/ColorButton';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export interface DrawInitialValues {
-  /**
-   * Initial brush color, from the colors provided
-   */
   color?: string;
-
   /**
-   * Initial thickness of the brush strokes
    * @default DEFAULT_THICKNESS
    */
   thickness?: number;
-
   /**
-   * Initial opacity of the brush strokes
    * @default DEFAULT_OPACITY
    */
   opacity?: number;
-
   /**
-   * Paths to be already drawn
    * @default []
    */
   paths?: PathType[];
-
   /**
-   * Initial tool of the canvas
    * @default DEFAULT_TOOL
    */
   tool?: DrawingTool;
@@ -82,184 +71,47 @@ export interface HideBottom {
 }
 
 export interface SimplifyOptions {
-  /**
-   * Enable SVG path simplification on paths, except the one currently being drawn
-   */
   simplifyPaths?: boolean;
-
-  /**
-   * Enable SVG path simplification on the stroke being drawn
-   */
   simplifyCurrentPath?: boolean;
-
-  /**
-   * Amount of simplification to apply
-   */
   amount?: number;
-
-  /**
-   * Ignore fractional part in the points. Improves performance
-   */
   roundPoints?: boolean;
 }
 
 export interface DrawProps {
   /**
-   * Color palette colors, specifying the color palette sections each containing rows of colors
    * @default DEFAULT_COLORS
    */
   colors?: string[][][];
-
-  /**
-   * Initial values for color the brush and paths
-   */
   initialValues?: DrawInitialValues;
-
-  /**
-   * Override the style of the container of the canvas
-   */
   canvasStyle?: StyleProp<ViewStyle>;
-
-  /**
-   * Override the style of the buttons
-   */
   buttonStyle?: StyleProp<ViewStyle>;
-
-  /**
-   * Callback function when paths change
-   */
   onPathsChange?: (paths: PathType[]) => any;
-
-  /**
-   * Height of the canvas
-   */
   height?: number;
-
-  /**
-   * Width of the canvas
-   */
   width?: number;
-
-  /**
-   * Change brush preview preset or remove it
-   */
   brushPreview?: BrushType;
-
-  /**
-   * Hide all of the bottom section, below the canvas, or only certain
-   * functionalities
-   */
   hideBottom?: boolean | HideBottom;
-
-  /**
-   * SVG simplification options
-   */
   simplifyOptions?: SimplifyOptions;
-
-  /**
-   * Automatically close the color picker after selecting a color
-   */
   autoDismissColorPicker?: boolean;
-
   /**
-   * Width of eraser (to compensate for path simplification)
    * @default DEFAULT_ERASER_SIZE
    */
   eraserSize?: number;
-
   /**
-   * Combine current path with the last path if it's the same color,
-   * thickness, and opacity.
-   *
-   * **Note**: changing this value while drawing will only be effective
-   * on the next change to opacity, thickness, or color change
    * @default false
    */
   combineWithLatestPath?: boolean;
 }
 
 export interface DrawRef {
-  /**
-   * Undo last brush stroke
-   */
   undo: () => void;
-
-  /**
-   * Change brush color
-   */
   setColor: Dispatch<SetStateAction<string>>;
-
-  /**
-   * Change brush thickness
-   */
   setThickness: (size: number) => void;
-
-  /**
-   * Removes all brush strokes
-   */
   clear: () => void;
-
-  /**
-   * Get brush strokes data
-   */
   getPaths: () => PathType[];
-
-  /**
-   * Append a path to the current drawing paths
-   */
   addPath: (path: PathType) => void;
-
-  /**
-   * Get SVG path string of the drawing
-   */
   getSvg: () => string;
 }
-
-interface Visibility {
-  undo: boolean;
-  clear: boolean;
-  colorPicker: boolean;
-  brushProperties: {
-    opacity: boolean;
-    size: boolean;
-  };
-}
-
-const getVisibility = (hideBottom: boolean | HideBottom): Visibility => {
-  if (typeof hideBottom === 'boolean') {
-    return {
-      clear: hideBottom,
-      colorPicker: hideBottom,
-      undo: hideBottom,
-      brushProperties: {
-        opacity: hideBottom,
-        size: hideBottom,
-      },
-    };
-  } else {
-    return {
-      clear: false,
-      colorPicker: false,
-      undo: false,
-      ...hideBottom,
-      brushProperties: {
-        opacity: false,
-        size: false,
-        ...(hideBottom.brushProperties &&
-          (typeof hideBottom.brushProperties === 'object'
-            ? hideBottom.brushProperties
-            : {
-                opacity: true,
-                size: true,
-              })),
-      },
-    };
-  }
-};
-
 /**
- * Generate SVG path string. Helper method for createSVGPath
- *
  * @param paths SVG path data
  * @param simplifyOptions Simplification options for the SVG drawing simplification
  * @returns SVG path strings
@@ -275,8 +127,6 @@ const generateSVGPath = (
   );
 
 /**
- * Generate multiple SVG path strings. If the path string is already defined, do not create a new one.
- *
  * @param paths SVG data paths
  * @param simplifyOptions Simplification options for the SVG drawing simplification
  * @returns An array of SVG path strings
@@ -343,14 +193,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [tool, setTool] = useState<DrawingTool>(initialValues.tool!);
 
-    const brushPropertiesHeight = useMemo(
-      () =>
-        (colors.length - 1) * 3 +
-        (colors[0].length + colors[1].length) * colorButtonSize +
-        SLIDERS_HEIGHT,
-      [colors]
-    );
-
     const addPath = (x: number, y: number) => {
       setPath((prev) => [
         ...prev,
@@ -407,33 +249,10 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       }
     };
 
-    const focusCanvas = () => {
-      if (colorPickerVisible) {
-        handleColorPicker();
-      }
-    };
+
 
     const handleThicknessOnChange = (t: number) => setThickness(t);
-
-  
-
-    const handleColorPicker = () => {
-      if (!colorPickerVisible) {
-        setColorPickerVisible(true);
-      }
-      Animated.timing(animVal, {
-        useNativeDriver: true,
-        toValue: colorPickerVisible ? 0 : -brushPropertiesHeight,
-        duration: 500,
-        easing: Easing.out(Easing.cubic),
-      }).start(() => {
-        if (colorPickerVisible) {
-          setColorPickerVisible(false);
-        }
-      });
-    };
     const handleUndo = () => {
-      focusCanvas();
       setPaths((list) =>
         list.reduce((acc: PathType[], p, index) => {
           if (index === list.length - 1) {
@@ -453,8 +272,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
         }, [])
       );
     };
-
-
     const clear = () => {
       setPaths([]);
       setPath([]);
@@ -465,7 +282,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const onHandlerStateChange = ({
       nativeEvent: { state, x, y },
     }: PanGestureHandlerStateChangeEvent) => {
-      focusCanvas();
+    
 
       if (!colorPickerVisible && tool === DrawingTool.Brush) {
         if (state === State.BEGAN) {
@@ -523,7 +340,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       outputRange: [0.5, 0],
       extrapolate: 'clamp',
     });
-
     const canvasContainerStyles = [
       styles.canvas,
       {
@@ -533,7 +349,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       },
       canvasStyle,
     ];
-
     const canvasOverlayStyles = [
       canvasStyle,
       styles.canvasOverlay,
@@ -541,7 +356,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
         opacity: opacityOverlay,
       },
     ];
-
     useEffect(
       () => onPathsChange && onPathsChange(paths),
       [paths, onPathsChange]
@@ -612,7 +426,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
               }}
               shouldCancelWhenOutside
             >
-              <View style={styles.canvasContent}>
+              <View style={{flex: 1}>
                 <SVGRenderer
                   currentColor={color}
                   currentOpacity={opacity}
@@ -647,9 +461,6 @@ const styles = StyleSheet.create({
     elevation: 5,
     backgroundColor: 'white',
     zIndex: 10,
-  },
-  canvasContent: {
-    flex: 1,
   },
   canvasOverlay: {
     position: 'absolute',
