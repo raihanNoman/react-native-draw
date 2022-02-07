@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -183,7 +184,11 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       paths: generateSVGPaths(initialValues.paths || [], simplifyOptions),
     };
 
-
+     // Change 1
+    interface TimeObj {
+      start: number;
+      end: number;
+    }
 
     const [paths, setPaths] = useState<PathType[]>(initialValues.paths!);
     const [path, setPath] = useState<PathDataType>([]);
@@ -192,6 +197,46 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const [opacity, setOpacity] = useState(initialValues.opacity!);
     const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [tool, setTool] = useState<DrawingTool>(initialValues.tool!);
+       
+    //change 9
+    const [currentTime, setCurrentTime] = useState<number>(0)
+    const [start, setStart] = useState<number>(-1)
+    const [times, setTimes] = useState<TimeObj[]>([])
+    const [time, setTime] = useState<TimeObj>({start: -1, end: -1 })
+    
+    
+    const [animVal] = useState(new Animated.Value(0)); //Change 2
+    const progress = useRef(new Animated.Value(0)).current // Change 3 //Change 4: import useRef
+      
+   const maximumTime = 5 //Change 6: // later get it as props
+    //Change 5: 
+    const startTimer = () => {
+      Animated.timing(progress, {
+        toValue: maximumTime, 
+        duration: maximumTime *1000, 
+        useNativeDriver: true
+      }).start(({finished})=>{
+        if(finished) console.log("Drawing Time Finished \n")
+      })
+    }                                               
+     
+       //Change 7
+    useEffect(() => {
+      console.log("Drawing Timer Started")
+      startTimer()
+     }, []);
+  //Change 8
+     useEffect(() => {
+       const listener = progress.addListener(({value})=>{
+         setCurrentTime(value)
+       })
+     
+       return () => {
+       progress.removeListener(listener)
+       progress.removeAllListeners()
+       };
+     });
+                                                  
 
     const addPath = (x: number, y: number) => {
       setPath((prev) => [
@@ -209,43 +254,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       switch (tool) {
         case DrawingTool.Brush:
           addPath(x, y);
-          break;
-        case DrawingTool.Eraser:
-          setPaths((prevPaths) =>
-            prevPaths.reduce((acc: PathType[], p) => {
-              const filteredDataPaths = p.data.reduce(
-                (
-                  acc2: { data: PathDataType[]; path: string[] },
-                  data,
-                  index
-                ) => {
-                  const closeToPath = data.some(
-                    ([x1, y1]) =>
-                      Math.abs(x1 - x) < p.thickness + eraserSize &&
-                      Math.abs(y1 - y) < p.thickness + eraserSize
-                  );
-
-                  // If point close to path, don't include it
-                  if (closeToPath) {
-                    return acc2;
-                  }
-
-                  return {
-                    data: [...acc2.data, data],
-                    path: [...acc2.path, p.path![index]],
-                  };
-                },
-                { data: [], path: [] }
-              );
-
-              if (filteredDataPaths.data.length > 0) {
-                return [...acc, { ...p, ...filteredDataPaths }];
-              }
-
-              return acc;
-            }, [])
-          );
-          break;
+          break;  // Change 10
       }
     };
 
@@ -277,7 +286,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       setPath([]);
     };
 
-    const [animVal] = useState(new Animated.Value(0));
+ 
 
     const onHandlerStateChange = ({
       nativeEvent: { state, x, y },
@@ -287,6 +296,12 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       if (!colorPickerVisible && tool === DrawingTool.Brush) {
         if (state === State.BEGAN) {
           addPath(x, y);
+              //change 11
+          if (start === -1){
+            console.log("setting start time for this path: ", currentTime);
+            setStart(currentTime);
+          }
+          
         } else if (state === State.END || state === State.CANCELLED) {
           setPaths((prev) => {
             const newSVGPath = generateSVGPath(path, simplifyOptions);
@@ -331,6 +346,18 @@ const Draw = forwardRef<DrawRef, DrawProps>(
             ];
           });
           setPath([]);
+              //Change 12
+          const end = currentTime
+          setTimes((prev)=> [
+            ...prev, 
+            {
+              start: start, 
+              end: end, 
+            }
+          ])
+          console.log("ending time for stroke at: ", end );
+          setStart(-1) // resetting trigger to record time
+          // reset time Successful
         }
       }
     };
