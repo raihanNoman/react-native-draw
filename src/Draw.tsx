@@ -29,7 +29,6 @@ import {
   DEFAULT_THICKNESS,
   DEFAULT_OPACITY,
   DEFAULT_TOOL,
-  DEFAULT_ERASER_SIZE,
   SLIDERS_HEIGHT,
 } from "./constants";
 import type { BrushType } from "./components/renderer/BrushPreview";
