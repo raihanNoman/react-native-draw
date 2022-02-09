@@ -203,7 +203,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const [start, setStart] = useState<number>(-1);
     const [times, setTimes] = useState<TimeObj[]>([]);
 
-    if (true) {
+    if (start === -99) {
       setTool(initialValues.tool!);
       setColorPickerVisible;
       setOpacity(initialValues.opacity!);
