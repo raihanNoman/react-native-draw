@@ -4,10 +4,9 @@ import React, {
   SetStateAction,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
-} from 'react';
+} from "react";
 import {
   Alert,
   Animated,
@@ -17,16 +16,16 @@ import {
   StyleSheet,
   View,
   ViewStyle,
-} from 'react-native';
+} from "react-native";
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
   PanGestureHandlerStateChangeEvent,
   State,
-} from 'react-native-gesture-handler';
-import { createSVGPath } from './utils';
-import { DrawingTool, PathDataType, PathType } from './types';
-import {SVGRenderer,} from './components';
+} from "react-native-gesture-handler";
+import { createSVGPath } from "./utils";
+import { DrawingTool, PathDataType, PathType } from "./types";
+import { SVGRenderer } from "./components";
 import {
   DEFAULT_COLORS,
   DEFAULT_THICKNESS,
@@ -34,10 +33,11 @@ import {
   DEFAULT_TOOL,
   DEFAULT_ERASER_SIZE,
   SLIDERS_HEIGHT,
-} from './constants';
-import type { BrushType } from './components/renderer/BrushPreview';
-import { colorButtonSize } from './components/colorPicker/ColorButton';
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+} from "./constants";
+import type { BrushType } from "./components/renderer/BrushPreview";
+import { colorButtonSize } from "./components/colorPicker/ColorButton";
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export interface DrawInitialValues {
   color?: string;
@@ -49,6 +49,7 @@ export interface DrawInitialValues {
    * @default DEFAULT_OPACITY
    */
   opacity?: number;
+
   /**
    * @default []
    */
@@ -101,7 +102,7 @@ export interface DrawProps {
    * @default false
    */
   combineWithLatestPath?: boolean;
-    maximumTime?: number; // Change 2.2 // Change 2.3 and 2.4 are in Draw.ts folder
+  maximumTime?: number; // Change 2.2
 }
 
 export interface DrawRef {
@@ -111,8 +112,9 @@ export interface DrawRef {
   clear: () => void;
   getPaths: () => PathType[];
   addPath: (path: PathType) => void;
-  getSvg: () => object;
+  getSvg: () => object; //change 3.1
 }
+
 /**
  * @param paths SVG path data
  * @param simplifyOptions Simplification options for the SVG drawing simplification
@@ -156,13 +158,13 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       colors = DEFAULT_COLORS,
       initialValues = {},
       canvasStyle,
- 
+
       onPathsChange,
       height = screenHeight - 80,
       width = screenWidth,
 
       simplifyOptions = {},
-      maximumTime,  //Change 2.1
+      maximumTime, //Change 2.1
 
       eraserSize = DEFAULT_ERASER_SIZE,
       combineWithLatestPath = false,
@@ -186,7 +188,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       paths: generateSVGPaths(initialValues.paths || [], simplifyOptions),
     };
 
-     // Change 1
+    // Change 1
     interface TimeObj {
       start: number;
       end: number;
@@ -199,46 +201,45 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const [opacity, setOpacity] = useState(initialValues.opacity!);
     const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [tool, setTool] = useState<DrawingTool>(initialValues.tool!);
-       
+
     //change 9
-    const [currentTime, setCurrentTime] = useState<number>(0)
-    const [start, setStart] = useState<number>(-1)
-    const [times, setTimes] = useState<TimeObj[]>([])
-    const [time, setTime] = useState<TimeObj>({start: -1, end: -1 })
-    
-    
+    const [currentTime, setCurrentTime] = useState<number>(0);
+    const [start, setStart] = useState<number>(-1);
+    const [times, setTimes] = useState<TimeObj[]>([]);
+    const [time, setTime] = useState<TimeObj>({ start: -1, end: -1 });
+
     const [animVal] = useState(new Animated.Value(0)); //Change 2
-    const progress = useRef(new Animated.Value(0)).current // Change 3 //Change 4: import useRef
-      
-//    const maximumTime = 5 //Change 6: // later get it as props  // dont need it. Since we implemented maxtime from props
-    //Change 5: 
+    const progress = useRef(new Animated.Value(0)).current; // Change 3
+    //Change 4: bring use ref
+
+    //  const maximumTime = 5 //Change 6: // later get it as props
+    //Change 5:
     const startTimer = () => {
       Animated.timing(progress, {
-        toValue: maximumTime, 
-        duration: maximumTime *1000, 
-        useNativeDriver: true
-      }).start(({finished})=>{
-        if(finished) console.log("Drawing Time Finished \n")
-      })
-    }                                               
-     
-       //Change 7
+        toValue: maximumTime,
+        duration: maximumTime * 1000,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) console.log("Drawing Time Finished");
+      });
+    };
+
+    //Change 7
     useEffect(() => {
-      console.log("Drawing Timer Started")
-      startTimer()
-     }, []);
-  //Change 8
-     useEffect(() => {
-       const listener = progress.addListener(({value})=>{
-         setCurrentTime(value)
-       })
-     
-       return () => {
-       progress.removeListener(listener)
-       progress.removeAllListeners()
-       };
-     });
-                                                  
+      console.log("Drawing Timer Started");
+      startTimer();
+    }, []);
+    //Change 8
+    useEffect(() => {
+      const listener = progress.addListener(({ value }) => {
+        setCurrentTime(value);
+      });
+
+      return () => {
+        progress.removeListener(listener);
+        progress.removeAllListeners();
+      };
+    });
 
     const addPath = (x: number, y: number) => {
       setPath((prev) => [
@@ -256,11 +257,9 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       switch (tool) {
         case DrawingTool.Brush:
           addPath(x, y);
-          break;  // Change 10
+          break; // Change 10
       }
     };
-
-
 
     const handleThicknessOnChange = (t: number) => setThickness(t);
     const handleUndo = () => {
@@ -288,22 +287,18 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       setPath([]);
     };
 
- 
-
     const onHandlerStateChange = ({
       nativeEvent: { state, x, y },
     }: PanGestureHandlerStateChangeEvent) => {
-    
-
       if (!colorPickerVisible && tool === DrawingTool.Brush) {
         if (state === State.BEGAN) {
           addPath(x, y);
-              //change 11
-          if (start === -1){
+
+          //change 11
+          if (start === -1) {
             console.log("setting start time for this path: ", currentTime);
             setStart(currentTime);
           }
-          
         } else if (state === State.END || state === State.CANCELLED) {
           setPaths((prev) => {
             const newSVGPath = generateSVGPath(path, simplifyOptions);
@@ -348,17 +343,18 @@ const Draw = forwardRef<DrawRef, DrawProps>(
             ];
           });
           setPath([]);
-              //Change 12
-          const end = currentTime
-          setTimes((prev)=> [
-            ...prev, 
+
+          //Change 12
+          const end = currentTime;
+          setTimes((prev) => [
+            ...prev,
             {
-              start: start, 
-              end: end, 
-            }
-          ])
-          console.log("ending time for stroke at: ", end );
-          setStart(-1) // resetting trigger to record time
+              start: start,
+              end: end,
+            },
+          ]);
+          console.log("ending time for stroke at: ", end);
+          setStart(-1); // resetting trigger to record time
           // reset time Successful
         }
       }
@@ -367,7 +363,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const opacityOverlay = animVal.interpolate({
       inputRange: [-SLIDERS_HEIGHT, 0],
       outputRange: [0.5, 0],
-      extrapolate: 'clamp',
+      extrapolate: "clamp",
     });
     const canvasContainerStyles = [
       styles.canvas,
@@ -400,32 +396,35 @@ const Draw = forwardRef<DrawRef, DrawProps>(
         setPaths((prev) => [...prev, newPath]);
       },
       getSvg: () => {
-  const serializePath = (d: string) => `d= ${d}`;
-        const separatePaths = (p: PathType) =>p.path!.reduce(
-            (acc, innerPath) =>`${acc}${serializePath( innerPath,)}`,'');
-        const combinedPath = (p: PathType) =>`${serializePath(p.path!.join(' '), )}`;
+        const serializePath = (d: string) => `d= ${d}`;
+        const separatePaths = (p: PathType) =>
+          p.path!.reduce(
+            (acc, innerPath) => `${acc}${serializePath(innerPath)}`,
+            ""
+          );
+        const combinedPath = (p: PathType) =>
+          `${serializePath(p.path!.join(" "))}`;
         const serializedPaths = paths.reduce(
           (acc, p) => `${acc}${p.combine ? combinedPath(p) : separatePaths(p)}`,
-          ''
+          ""
         );
-  
-          const pathsStringArray : string[] = []
-        const split = serializedPaths.split("d= ")
-        for (let i = 0; i<split.length;i++){
-          if(split[i].startsWith("M")){
-            pathsStringArray.push(split[i])
+
+        const pathsStringArray: string[] = [];
+        const split = serializedPaths.split("d= ");
+        for (let i = 0; i < split.length; i++) {
+          if (split[i].startsWith("M")) {
+            pathsStringArray.push(split[i]);
           }
         }
-       
+
         const DrawSvgObj = {
-          height: height ,
-          width : width, 
-          viewBox : `"0 0 ${width} ${height}"`, 
-          pathStrings: pathsStringArray, 
-          timeStamps: times,  
-        }
+          height: height,
+          width: width,
+          viewBox: `"0 0 ${width} ${height}"`,
+          pathStrings: pathsStringArray,
+          timeStamps: times,
+        };
         return DrawSvgObj;
-     
       },
     }));
 
@@ -447,7 +446,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
               }}
               shouldCancelWhenOutside
             >
-              <View style={{flex: 1}>
+              <View style={{ flex: 1 }}>
                 <SVGRenderer
                   currentColor={color}
                   currentOpacity={opacity}
@@ -475,19 +474,19 @@ const Draw = forwardRef<DrawRef, DrawProps>(
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   canvas: {
     elevation: 5,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     zIndex: 10,
   },
   canvasOverlay: {
-    position: 'absolute',
-    height: '100%',
-    width: '100%',
-    backgroundColor: '#000000',
+    position: "absolute",
+    height: "100%",
+    width: "100%",
+    backgroundColor: "#000000",
   },
 });
 
