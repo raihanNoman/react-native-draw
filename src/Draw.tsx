@@ -8,10 +8,8 @@ import React, {
   useState,
 } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
-  Easing,
   StyleProp,
   StyleSheet,
   View,
@@ -35,7 +33,6 @@ import {
   SLIDERS_HEIGHT,
 } from "./constants";
 import type { BrushType } from "./components/renderer/BrushPreview";
-import { colorButtonSize } from "./components/colorPicker/ColorButton";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -166,7 +163,6 @@ const Draw = forwardRef<DrawRef, DrawProps>(
       simplifyOptions = {},
       maximumTime, //Change 2.1
 
-      eraserSize = DEFAULT_ERASER_SIZE,
       combineWithLatestPath = false,
     } = {},
     ref
@@ -199,6 +195,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const [color, setColor] = useState(initialValues.color!);
     const [thickness, setThickness] = useState(initialValues.thickness!);
     const [opacity, setOpacity] = useState(initialValues.opacity!);
+
     const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [tool, setTool] = useState<DrawingTool>(initialValues.tool!);
 
@@ -206,7 +203,12 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     const [currentTime, setCurrentTime] = useState<number>(0);
     const [start, setStart] = useState<number>(-1);
     const [times, setTimes] = useState<TimeObj[]>([]);
-    const [time, setTime] = useState<TimeObj>({ start: -1, end: -1 });
+
+    if (true) {
+      setTool(initialValues.tool!);
+      setColorPickerVisible;
+      setOpacity(initialValues.opacity!);
+    }
 
     const [animVal] = useState(new Animated.Value(0)); //Change 2
     const progress = useRef(new Animated.Value(0)).current; // Change 3
@@ -215,6 +217,7 @@ const Draw = forwardRef<DrawRef, DrawProps>(
     //  const maximumTime = 5 //Change 6: // later get it as props
     //Change 5:
     const startTimer = () => {
+      if (maximumTime === undefined) return;
       Animated.timing(progress, {
         toValue: maximumTime,
         duration: maximumTime * 1000,
